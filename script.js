@@ -285,73 +285,52 @@ $(function(){
 })();
 
 /* ------------------------------------------------------------
-   背景B：帳簿のマス目。ゆっくり斜めに流れ、行ごとにマスが順に点灯する
+   背景B：奥行きのある面の重なり。マウス・スクロール・スマホの傾きに合わせて面をずらす
+   （面の形と漂う動きは CSS。ここでは --px / --py を -1〜1 で更新するだけ）
 ------------------------------------------------------------ */
 (function () {
-    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    Array.prototype.forEach.call(document.querySelectorAll('.hero, .sec-final'), function (host) {
-        var canvas = document.createElement('canvas');
-        canvas.className = 'bg-canvas';
-        canvas.setAttribute('aria-hidden', 'true');
-        host.insertBefore(canvas, host.firstChild);
-        var ctx = canvas.getContext('2d');
-        if (!ctx) return;
-        var w = 0, h = 0, cell = 64, dpr = 1, cells = [], nextRun = 0, running = false;
-
-        function resize() {
-            dpr = Math.min(window.devicePixelRatio || 1, 2);
-            w = host.clientWidth; h = host.clientHeight;
-            cell = w < 768 ? 46 : 68;
-            canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
-        }
-        function draw(now) {
-            var sx = now * 0.014, sy = now * 0.008;           // マス目全体が流れる量
-            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-            ctx.clearRect(0, 0, w, h);
-
-            // 新しい「記入」を始める：ある行の左から右へ、マスが順に点く
-            if (now >= nextRun) {
-                var row = Math.floor((sy + Math.random() * h) / cell);
-                var col = Math.floor((sx + Math.random() * w * 0.8) / cell);
-                var len = 4 + Math.floor(Math.random() * 8);
-                var dark = Math.random() < 0.3;
-                for (var i = 0; i < len; i++) cells.push({ c: col + i, r: row, born: now + i * 80, dark: dark });
-                nextRun = now + 500 + Math.random() * 900;
-            }
-            cells = cells.filter(function (k) { return now - k.born < 2200; });
-            cells.forEach(function (k) {
-                var age = now - k.born;
-                if (age < 0) return;
-                var a = age < 160 ? age / 160 : 1 - (age - 160) / 2040;
-                ctx.fillStyle = k.dark ? 'rgba(0,0,0,' + (0.10 * a) + ')' : 'rgba(255,255,255,' + (0.34 * a) + ')';
-                ctx.fillRect(k.c * cell - sx + 1, k.r * cell - sy + 1, cell - 1, cell - 1);
-            });
-
-            // 罫線
-            ctx.strokeStyle = 'rgba(255,255,255,0.22)';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            for (var x = -(sx % cell); x < w; x += cell) { ctx.moveTo(Math.round(x) + 0.5, 0); ctx.lineTo(Math.round(x) + 0.5, h); }
-            for (var y = -(sy % cell); y < h; y += cell) { ctx.moveTo(0, Math.round(y) + 0.5); ctx.lineTo(w, Math.round(y) + 0.5); }
-            ctx.stroke();
-        }
-        function visible() {
-            var r = host.getBoundingClientRect();
-            return r.bottom > 0 && r.top < window.innerHeight && !document.hidden;
-        }
-        function loop(now) {
-            if (!visible()) { running = false; return; }   // 画面外では止めて、電池を使わない
-            draw(now);
-            requestAnimationFrame(loop);
-        }
-        function start() { if (!running && !reduce && visible()) { running = true; requestAnimationFrame(loop); } }
-
-        resize();
-        if (window.ResizeObserver) { new ResizeObserver(function () { resize(); if (reduce) draw(0); }).observe(host); }
-        window.addEventListener('resize', resize);
-        if (reduce) { draw(0); return; }
-        window.addEventListener('scroll', start, { passive: true });
-        document.addEventListener('visibilitychange', start);
-        start();
+    var hosts = Array.prototype.map.call(document.querySelectorAll('.hero, .sec-final'), function (host) {
+        var wrap = document.createElement('div');
+        wrap.className = 'bg-planes';
+        wrap.setAttribute('aria-hidden', 'true');
+        wrap.innerHTML = '<span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span>';
+        host.insertBefore(wrap, host.firstChild);
+        return { host: host, wrap: wrap, x: 0, y: 0 };
     });
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    var aimX = 0, aimY = 0, running = false;
+    function clamp(v) { return Math.max(-1, Math.min(1, v)); }
+    function frame() {
+        var moving = false;
+        hosts.forEach(function (h) {
+            var r = h.host.getBoundingClientRect();
+            if (r.bottom < 0 || r.top > window.innerHeight) return;
+            // スクロールで画面内を通過する位置（-1〜1）を縦のずれに足す
+            var ty = clamp(aimY + (r.top + r.height / 2 - window.innerHeight / 2) / window.innerHeight);
+            h.x += (aimX - h.x) * 0.08;
+            h.y += (ty - h.y) * 0.08;
+            if (Math.abs(aimX - h.x) > 0.002 || Math.abs(ty - h.y) > 0.002) moving = true;
+            h.wrap.style.setProperty('--px', h.x.toFixed(4));
+            h.wrap.style.setProperty('--py', h.y.toFixed(4));
+        });
+        if (moving) requestAnimationFrame(frame); else running = false;
+    }
+    function kick() { if (!running) { running = true; requestAnimationFrame(frame); } }
+
+    window.addEventListener('pointermove', function (e) {
+        if (e.pointerType !== 'mouse') return;
+        aimX = clamp((e.clientX / window.innerWidth - 0.5) * 2);
+        aimY = clamp((e.clientY / window.innerHeight - 0.5) * 2) * 0.6;
+        kick();
+    }, { passive: true });
+    window.addEventListener('deviceorientation', function (e) {
+        if (e.gamma === null || e.beta === null) return;
+        aimX = clamp(e.gamma / 25);
+        aimY = clamp((e.beta - 45) / 35) * 0.6;
+        kick();
+    });
+    window.addEventListener('scroll', kick, { passive: true });
+    window.addEventListener('resize', kick);
+    kick();
 })();
