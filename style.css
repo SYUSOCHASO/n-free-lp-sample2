@@ -628,8 +628,8 @@ main { overflow-x: clip; }
   .sec-final .btn-cta { min-height: 88px; }
 }
 
-/* sample1・sample2 共通：色面を薄い黄緑にする。白文字が読めなくなる 2 行目の見出しは、墨の帯の上に白文字で置く */
-:root { --c-green: #93e17f; }
+/* sample1・sample2 共通：色面を既存 N-Free の緑（#21b384）にする。2 行目の見出しは、墨の帯の上に白文字で置く */
+:root { --c-green: #21b384; }
 .hero-title-accent { isolation: isolate; padding: 0 .1em; color: #fff; animation: wipe-right .8s cubic-bezier(.77, 0, .18, 1) 1.45s both; }
 .hero-title-accent::after { z-index: -1; inset: 6% 0 4% 0; transform: none; animation: none; }
 .hero-subtitle strong { background-image: linear-gradient(rgba(255, 255, 255, .85), rgba(255, 255, 255, .85)); }
@@ -640,15 +640,18 @@ main { overflow-x: clip; }
 .bg-planes span { position: absolute; inset: 0; transform: translate3d(calc(var(--px) * var(--k) * 1px), calc(var(--py) * var(--k) * 1px), 0); will-change: transform; }
 .bg-planes i { position: absolute; display: block; animation: plane-in 1.6s var(--ease-out) both, plane-drift var(--t) ease-in-out 1.6s infinite alternate; }
 .bg-planes span:nth-child(1) { --k: 12; }
-.bg-planes span:nth-child(1) i { --r: -24deg; --t: 19s; --dx: 3%; --dy: -2%; --from: -60%; left: 26%; top: -60%; width: 46%; height: 220%; background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .26)); animation-delay: .2s, 1.8s; }
+.bg-planes span:nth-child(1) i { --r: -24deg; --t: 9s; --dx: 16%; --dy: -4%; --r2: -20deg; --from: -60%; left: 26%; top: -60%; width: 46%; height: 220%; background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .26)); animation-delay: .2s, 1.8s; }
 .bg-planes span:nth-child(2) { --k: 26; }
-.bg-planes span:nth-child(2) i { --r: -24deg; --t: 15s; --dx: -4%; --dy: 2%; --from: 70%; left: 52%; top: -60%; width: 34%; height: 220%; background: linear-gradient(90deg, rgba(18, 18, 18, .1), rgba(18, 18, 18, 0) 70%); box-shadow: -30px 0 60px rgba(0, 0, 0, .06); animation-delay: .4s, 2s; }
+.bg-planes span:nth-child(2) i { --r: -24deg; --t: 7s; --dx: -22%; --dy: 4%; --r2: -28deg; --from: 70%; left: 52%; top: -60%; width: 34%; height: 220%; background: linear-gradient(90deg, rgba(18, 18, 18, .1), rgba(18, 18, 18, 0) 70%); box-shadow: -30px 0 60px rgba(0, 0, 0, .06); animation-delay: .4s, 2s; }
 .bg-planes span:nth-child(3) { --k: 46; }
-.bg-planes span:nth-child(3) i { --r: 18deg; --t: 22s; --dx: 5%; --dy: 3%; --from: 80%; left: 60%; top: -70%; width: 30%; height: 240%; background: linear-gradient(270deg, rgba(255, 255, 255, .42), rgba(255, 255, 255, .06)); box-shadow: 30px 0 70px rgba(0, 0, 0, .07); animation-delay: .6s, 2.2s; }
+.bg-planes span:nth-child(3) i { --r: 18deg; --t: 11s; --dx: 26%; --dy: 5%; --r2: 24deg; --from: 80%; left: 60%; top: -70%; width: 30%; height: 240%; background: linear-gradient(270deg, rgba(255, 255, 255, .42), rgba(255, 255, 255, .06)); box-shadow: 30px 0 70px rgba(0, 0, 0, .07); animation-delay: .6s, 2.2s; }
 .bg-planes span:nth-child(4) { --k: 72; }
-.bg-planes span:nth-child(4) i { --r: -24deg; --t: 13s; --dx: -6%; --dy: -3%; --from: 90%; left: 84%; top: -60%; width: 26%; height: 220%; background: linear-gradient(90deg, rgba(255, 255, 255, .55), rgba(255, 255, 255, .2)); box-shadow: -40px 0 80px rgba(0, 0, 0, .1); animation-delay: .8s, 2.4s; }
+.bg-planes span:nth-child(4) i { --r: -24deg; --t: 6s; --dx: -34%; --dy: -5%; --r2: -19deg; --from: 90%; left: 84%; top: -60%; width: 26%; height: 220%; background: linear-gradient(90deg, rgba(255, 255, 255, .55), rgba(255, 255, 255, .2)); box-shadow: -40px 0 80px rgba(0, 0, 0, .1); animation-delay: .8s, 2.4s; }
 @keyframes plane-in { from { opacity: 0; translate: var(--from) 0; } to { opacity: 1; translate: 0 0; } }
-@keyframes plane-drift { from { transform: rotate(var(--r)) translate3d(0, 0, 0); } to { transform: rotate(var(--r)) translate3d(var(--dx), var(--dy), 0); } }
+@keyframes plane-drift { from { transform: rotate(var(--r)) translate3d(0, 0, 0); } to { transform: rotate(var(--r2)) translate3d(var(--dx), var(--dy), 0); } }
+/* 数秒おきに、斜めの光が面の上を横切る */
+.bg-planes::after { content: ""; position: absolute; top: -60%; left: 0; width: 22%; height: 220%; background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .5), rgba(255, 255, 255, 0)); transform: rotate(-24deg) translateX(-400%); animation: plane-sweep 5.5s cubic-bezier(.6, 0, .3, 1) 2.4s infinite; }
+@keyframes plane-sweep { 0% { transform: rotate(-24deg) translateX(-400%); } 60%, 100% { transform: rotate(-24deg) translateX(700%); } }
 .bg-planes i { transform: rotate(var(--r)); }
 @media (max-width: 768px) {
   .bg-planes span:nth-child(1) i { left: -10%; width: 70%; }
