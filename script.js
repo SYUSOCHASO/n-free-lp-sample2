@@ -285,7 +285,7 @@ $(function(){
 })();
 
 /* ------------------------------------------------------------
-   案2：方眼の上を走る光。細い方眼を敷き、縦横の線に沿って尾を引く光を走らせる。画面外では描画を止める
+   案2：自由に走る光。尾を引く光が、ゆるやかに向きを変えながらトップ全体を走る。画面外では描画を止める
 ------------------------------------------------------------ */
 (function () {
     var host = document.querySelector('.hero');
@@ -297,50 +297,48 @@ $(function(){
     var ctx = canvas.getContext('2d');
     if (!ctx) return;
     var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var w = 0, h = 0, dpr = 1, cell = 56, running = false, last = 0, nextBeam = 0, beams = [];
+    var w = 0, h = 0, dpr = 1, running = false, last = 0, comets = [], MARGIN = 160, TRAIL = 70;
+    function make(inside) {
+        var c = { f1: 0.25 + Math.random() * 0.4, f2: 0.6 + Math.random() * 0.7, p1: Math.random() * 6.28, p2: Math.random() * 6.28,
+            speed: 150 + Math.random() * 150, color: Math.random() < 0.6 ? '63,227,173' : '255,255,255', trail: [] };
+        if (inside) { c.x = Math.random() * w; c.y = Math.random() * h; c.a = Math.random() * 6.28; return c; }
+        var edge = Math.floor(Math.random() * 4);   // 画面の外から、内側へ向かって入ってくる
+        if (edge === 0) { c.x = -MARGIN; c.y = Math.random() * h; c.a = 0; }
+        else if (edge === 1) { c.x = w + MARGIN; c.y = Math.random() * h; c.a = Math.PI; }
+        else if (edge === 2) { c.x = Math.random() * w; c.y = -MARGIN; c.a = Math.PI / 2; }
+        else { c.x = Math.random() * w; c.y = h + MARGIN; c.a = -Math.PI / 2; }
+        c.a += (Math.random() - 0.5) * 1.2;
+        return c;
+    }
     function resize() {
         dpr = Math.min(window.devicePixelRatio || 1, 2);
         w = host.clientWidth; h = host.clientHeight;
-        cell = w < 768 ? 40 : 56;
         canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
-    }
-    function spawn() {
-        var horizontal = Math.random() < 0.55, forward = Math.random() < 0.5;
-        var span = horizontal ? w : h, lines = Math.floor((horizontal ? h : w) / cell);
-        beams.push({
-            horizontal: horizontal, dir: forward ? 1 : -1, line: (1 + Math.floor(Math.random() * lines)) * cell,
-            pos: forward ? -260 : span + 260, speed: 170 + Math.random() * 190, len: 150 + Math.random() * 150,
-            color: Math.random() < 0.6 ? '63,227,173' : '255,255,255'
-        });
+        var count = w < 768 ? 6 : 9;
+        while (comets.length < count) comets.push(make(true));
+        comets.length = count;
     }
     function draw(now, dt) {
+        var t = now * 0.001;
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         ctx.clearRect(0, 0, w, h);
-        ctx.strokeStyle = 'rgba(255,255,255,0.07)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        for (var x = cell; x < w; x += cell) { ctx.moveTo(x + 0.5, 0); ctx.lineTo(x + 0.5, h); }
-        for (var y = cell; y < h; y += cell) { ctx.moveTo(0, y + 0.5); ctx.lineTo(w, y + 0.5); }
-        ctx.stroke();
-
-        if (now >= nextBeam && beams.length < 12) { spawn(); nextBeam = now + 380 + Math.random() * 620; }
-        ctx.lineWidth = 1.6;
-        beams = beams.filter(function (b) {
-            b.pos += b.speed * b.dir * dt;
-            var span = b.horizontal ? w : h;
-            if (b.pos < -320 || b.pos > span + 320) return false;
-            var tail = b.pos - b.len * b.dir, l = b.line + 0.5;
-            var g = b.horizontal ? ctx.createLinearGradient(tail, 0, b.pos, 0) : ctx.createLinearGradient(0, tail, 0, b.pos);
-            g.addColorStop(0, 'rgba(' + b.color + ',0)'); g.addColorStop(1, 'rgba(' + b.color + ',0.9)');
-            ctx.strokeStyle = g;
-            ctx.beginPath();
-            if (b.horizontal) { ctx.moveTo(tail, l); ctx.lineTo(b.pos, l); } else { ctx.moveTo(l, tail); ctx.lineTo(l, b.pos); }
-            ctx.stroke();
-            ctx.fillStyle = 'rgba(' + b.color + ',0.95)';
-            ctx.beginPath();
-            if (b.horizontal) ctx.arc(b.pos, l, 2, 0, 6.2832); else ctx.arc(l, b.pos, 2, 0, 6.2832);
-            ctx.fill();
-            return true;
+        ctx.lineCap = 'round';
+        comets.forEach(function (c, i) {
+            c.a += (Math.sin(t * c.f1 + c.p1) * 0.9 + Math.sin(t * c.f2 + c.p2) * 0.6) * dt;   // ゆるやかに向きを変える
+            c.x += Math.cos(c.a) * c.speed * dt; c.y += Math.sin(c.a) * c.speed * dt;
+            c.trail.push(c.x, c.y);
+            if (c.trail.length > TRAIL * 2) c.trail.splice(0, 2);
+            if (c.x < -MARGIN * 2 || c.x > w + MARGIN * 2 || c.y < -MARGIN * 2 || c.y > h + MARGIN * 2) { comets[i] = make(false); return; }
+            var n = c.trail.length / 2;
+            for (var k = 1; k < n; k++) {
+                var p = k / n;
+                ctx.strokeStyle = 'rgba(' + c.color + ',' + (Math.pow(p, 1.7) * 0.9).toFixed(3) + ')';
+                ctx.lineWidth = 0.6 + 1.6 * p;
+                ctx.beginPath(); ctx.moveTo(c.trail[k * 2 - 2], c.trail[k * 2 - 1]); ctx.lineTo(c.trail[k * 2], c.trail[k * 2 + 1]); ctx.stroke();
+            }
+            var g = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, 12);
+            g.addColorStop(0, 'rgba(' + c.color + ',0.75)'); g.addColorStop(1, 'rgba(' + c.color + ',0)');
+            ctx.fillStyle = g; ctx.beginPath(); ctx.arc(c.x, c.y, 12, 0, 6.2832); ctx.fill();
         });
     }
     function visible() { var r = host.getBoundingClientRect(); return r.bottom > 0 && r.top < window.innerHeight && !document.hidden; }
@@ -351,8 +349,8 @@ $(function(){
     }
     function start() { if (!running && !reduce && visible()) { running = true; last = performance.now(); requestAnimationFrame(loop); } }
     resize();
-    if (window.ResizeObserver) new ResizeObserver(function () { resize(); if (reduce) draw(0, 0); }).observe(host);
-    if (reduce) { nextBeam = Infinity; draw(0, 0); return; }
+    if (window.ResizeObserver) new ResizeObserver(resize).observe(host);
+    if (reduce) return;
     window.addEventListener('scroll', start, { passive: true });
     document.addEventListener('visibilitychange', start);
     start();
