@@ -679,8 +679,24 @@ main { overflow-x: clip; }
 .hero::before, .hero::after { pointer-events: none; }
 .hero-bg { position: absolute; pointer-events: none; }
 
-/* 案2：墨色 × 白文字。尾を引く光が、決まった道筋なしにトップ全体を自由な曲線で走り抜けていく（描画は script.js） */
+/* 案2：墨色 × 白文字。領収書を読み取るスキャナーのように、光の線がトップ全体を上から下へなぞり続ける。四隅にはカメラのファインダーの印 */
 .hero { --h-bg: #141414; --h-text: #fff; --h-accent: #3fe3ad; --h-line: rgba(255, 255, 255, .55); --h-chip-bg: #fff; --h-chip-text: #141414; --h-btn-bg: #fff; --h-btn-text: #141414; --h-tag-bg: #3fe3ad; --h-tag-text: #141414; --h-marker: rgba(63, 227, 173, .35); }
-.hero::after { content: ""; position: absolute; inset: 0; background: radial-gradient(46% 62% at 80% 50%, rgba(63, 227, 173, .16), transparent 70%), radial-gradient(40% 50% at 0% 0%, rgba(255, 255, 255, .06), transparent 70%); animation: q-fade 2.4s ease-out both; }
-canvas.hero-bg { inset: 0; width: 100%; height: 100%; animation: q-fade 2s ease-out both; }
-@media (max-width: 768px) { .hero::after { background: radial-gradient(90% 34% at 60% 82%, rgba(63, 227, 173, .16), transparent 70%), radial-gradient(70% 30% at 0% 0%, rgba(255, 255, 255, .07), transparent 70%); } }
+.hero::after { content: ""; position: absolute; inset: 0; background: radial-gradient(46% 62% at 80% 50%, rgba(63, 227, 173, .14), transparent 70%); animation: q-fade 2.4s ease-out both; }
+.s-scan { inset: 0; overflow: hidden; animation: q-fade 1.6s ease-out both; }
+.s-beam { position: absolute; left: 0; right: 0; top: 0; height: 260px; margin-top: -262px; background: linear-gradient(180deg, rgba(63, 227, 173, 0), rgba(63, 227, 173, .16)); border-bottom: 2px solid #3fe3ad; box-shadow: 0 6px 26px rgba(63, 227, 173, .6); animation: s-sweep 5.5s cubic-bezier(.45, 0, .55, 1) 1.4s infinite; }
+.s-scan b { position: absolute; width: 36px; height: 36px; border: 2px solid rgba(255, 255, 255, .7); animation: s-mark 2.75s ease-in-out infinite alternate; }
+.s-scan b:nth-of-type(1) { left: 22px; top: 22px; border-right: 0; border-bottom: 0; }
+.s-scan b:nth-of-type(2) { right: 22px; top: 22px; border-left: 0; border-bottom: 0; }
+.s-scan b:nth-of-type(3) { left: 22px; bottom: 22px; border-right: 0; border-top: 0; }
+.s-scan b:nth-of-type(4) { right: 22px; bottom: 22px; border-left: 0; border-top: 0; }
+@keyframes s-sweep { 0% { top: 0; } 72%, 100% { top: calc(100% + 280px); } }
+@keyframes s-mark { from { opacity: .35; } to { opacity: 1; } }
+@media (max-width: 768px) {
+  .hero::after { background: radial-gradient(90% 34% at 60% 82%, rgba(63, 227, 173, .14), transparent 70%); }
+  .s-beam { height: 200px; margin-top: -202px; }
+  .s-scan b { width: 22px; height: 22px; }
+  .s-scan b:nth-of-type(1), .s-scan b:nth-of-type(3) { left: 8px; }
+  .s-scan b:nth-of-type(2), .s-scan b:nth-of-type(4) { right: 8px; }
+  .s-scan b:nth-of-type(1), .s-scan b:nth-of-type(2) { top: 10px; }
+  .s-scan b:nth-of-type(3), .s-scan b:nth-of-type(4) { bottom: 10px; }
+}
