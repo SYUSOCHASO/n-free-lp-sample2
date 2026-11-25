@@ -285,22 +285,17 @@ $(function(){
 })();
 
 /* ------------------------------------------------------------
-   背景パターン「カードの壁」：文字のないカードを段に並べる。各段は同じ並びを 2 回入れて、切れ目なく流す（動きは CSS）
+   背景パターン「シャッター」：[左%, 上%, 幅em, 高さem]。1 つの枠は 9 秒で 1 巡し、枠ごとに 1.5 秒ずつずらす（動きは CSS）
 ------------------------------------------------------------ */
 (function () {
     var host = document.querySelector('.hero');
     if (!host) return;
-    var kinds = [
-        '<b></b><i></i><i class="s"></i>',
-        '<u><s style="--v:40%"></s><s style="--v:62%"></s><s style="--v:50%"></s><s style="--v:78%"></s><s style="--v:100%"></s></u><i class="s"></i>',
-        '<i class="a"></i><i></i><i class="s"></i><i></i>',
-        '<i></i><i class="s"></i><i></i><i class="a"></i>'
-    ];
-    var rows = window.innerWidth < 768 ? 13 : 8, html = '<div class="hero-bg v-wall" aria-hidden="true"><div class="v-tilt">';
-    for (var r = 0; r < rows; r++) {
-        var cards = '';
-        for (var c = 0; c < 9; c++) cards += '<div class="v-card">' + kinds[(c + r * 3) % 4] + '</div>';
-        html += '<div class="v-row" style="--t:' + (90 + (r * 11) % 36) + 's">' + cards + cards + '</div>';
-    }
-    host.insertAdjacentHTML('afterbegin', html + '</div></div>');
+    var frames = [[4, 14, 11, 15], [58, 23, 15, 20], [40, 86, 17, 13], [93, 13, 12, 16], [63, 66, 13, 17], [48, 8, 15, 10], [96, 84, 14, 18], [5, 82, 12, 15]];
+    var order = [0, 4, 2, 6, 1, 5, 3, 7], html = '<div class="hero-bg sh-wrap" aria-hidden="true">';
+    frames.forEach(function (f, i) {
+        html += '<div class="sh" style="--x:' + f[0] + '%;--y:' + f[1] + '%;--w:' + f[2] + 'em;--h:' + f[3] + 'em;--t:12s;--dl:-' + (order[i] * 1.5) + 's">'
+            + '<i class="sh-doc"></i><i class="sh-flash"></i><b></b><b></b><b></b><b></b>'
+            + '<svg viewBox="0 0 24 24" focusable="false"><circle cx="12" cy="12" r="11"/><path d="M7 12.4l3.4 3.4L17 9"/></svg></div>';
+    });
+    host.insertAdjacentHTML('afterbegin', html + '</div>');
 })();

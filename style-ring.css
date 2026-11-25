@@ -683,18 +683,16 @@ main { overflow-x: clip; }
 .hero { --h-bg: #141414; --h-text: #fff; --h-accent: #3fe3ad; --h-line: rgba(255, 255, 255, .55); --h-chip-bg: #fff; --h-chip-text: #141414; --h-btn-bg: #fff; --h-btn-text: #141414; --h-tag-bg: #3fe3ad; --h-tag-text: #141414; --h-marker: rgba(63, 227, 173, .35);
   --p-card: #232625; --p-edge: rgba(255, 255, 255, .1); --p-bar: rgba(255, 255, 255, .16); --p-accent: #3fe3ad; --p-shadow: rgba(0, 0, 0, .5); --p-paper: #f4f4f1; --p-print: #b9bdb9; --p-route: rgba(255, 255, 255, .28); --p-grid: rgba(255, 255, 255, .07); }
 
-/* 背景パターン「ロール紙」：レシートの長い紙がトップ全体を曲がりながら横切り、印字の線が紙の上を送られ続ける（SVG は script.js が置く） */
-.z-tape { inset: 0; width: 100%; height: 100%; animation: q-fade 1.8s ease-out both; }
-.z-tape path { fill: none; stroke-linecap: butt; }
-.z-tape .z-shadow { stroke: var(--p-shadow); stroke-width: var(--zw); transform: translate(0, 16px); filter: blur(14px); }
-.z-tape .z-paper { stroke: var(--p-paper); stroke-width: var(--zw); }
-.z-tape .z-print { stroke: var(--p-print); stroke-width: calc(var(--zw) * .62); stroke-dasharray: 4 10 4 10 4 10 4 40; animation: z-feed 1.9s linear infinite; }
-.z-tape .z-total { stroke: var(--p-accent); stroke-width: calc(var(--zw) * .62); stroke-dasharray: 6 338; animation: z-feed2 7.6s linear infinite; }
-.z-tape.z-pc { --zw: 96px; }
-.z-tape.z-sp { --zw: 62px; display: none; }
-@keyframes z-feed { to { stroke-dashoffset: -86; } }
-@keyframes z-feed2 { to { stroke-dashoffset: -344; } }
-@media (max-width: 768px) {
-  .z-tape.z-pc { display: none; }
-  .z-tape.z-sp { display: block; -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, .28), rgba(0, 0, 0, .28) 60%, #000 78%); mask-image: linear-gradient(180deg, rgba(0, 0, 0, .28), rgba(0, 0, 0, .28) 60%, #000 78%); }
-}
+/* 背景パターン「満ちていくリング」：スマホ画像の後ろで大きな輪が少しずつ満ち、1 周するとチェックに変わる。まわりの小さな輪も時間差で満ちる（輪は script.js が置く） */
+.g-rings { inset: 0; font-size: 10px; overflow: hidden; animation: q-fade 1.8s ease-out both; }
+.g-ring { position: absolute; left: var(--x); top: var(--y); width: var(--s); height: var(--s); margin: calc(var(--s) / -2); }
+.g-ring svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.g-ring circle, .g-ring path { fill: none; stroke-width: var(--sw); stroke-linecap: round; stroke-linejoin: round; }
+.g-ring .g-track { stroke: var(--p-grid); }
+.g-ring .g-fill { stroke: var(--p-accent); stroke-dasharray: 1000; transform: rotate(-90deg); transform-origin: 50px 50px; filter: drop-shadow(0 0 5px var(--p-accent)); animation: g-fill var(--t) cubic-bezier(.5, 0, .3, 1) var(--dl) infinite; }
+.g-ring .g-check { stroke: var(--p-accent); stroke-width: calc(var(--sw) * 1.3); stroke-dasharray: 100; animation: g-check var(--t) ease-out var(--dl) infinite; }
+.g-big { left: var(--px, 80%); top: var(--py, 50%); --s: 62em; --sw: 1; --t: 10s; --dl: 0s; }
+.g-big .g-check { display: none; }
+@keyframes g-fill { 0% { stroke-dashoffset: 1000; opacity: 1; } 68%, 90% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 0; } }
+@keyframes g-check { 0%, 68% { stroke-dashoffset: 100; opacity: 1; } 78%, 90% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 0; } }
+@media (max-width: 768px) { .g-rings { font-size: 6.4px; } .g-big { --s: 52em; --sw: 1.2; } }

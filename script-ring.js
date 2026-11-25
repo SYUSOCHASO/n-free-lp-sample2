@@ -285,14 +285,26 @@ $(function(){
 })();
 
 /* ------------------------------------------------------------
-   背景パターン「グラフ線」：実線（伸びた線）と点線（比べる線）を置く（描かれる動きと先端の脈は CSS）
+   背景パターン「満ちていくリング」：小さな輪は [左%, 上%, 直径em, 線の太さ, 1 巡の秒数]。大きな輪はスマホ画像の中心に合わせる（動きは CSS）
 ------------------------------------------------------------ */
 (function () {
     var host = document.querySelector('.hero');
     if (!host) return;
-    var line = 'M0 340C80 330 120 300 180 310S280 250 340 262S440 200 500 214S600 140 660 156S780 90 830 100S890 70 920 72';
-    host.insertAdjacentHTML('afterbegin',
-        '<div class="hero-bg c-chart" aria-hidden="true"><svg viewBox="0 0 1000 400" preserveAspectRatio="none" focusable="false">'
-        + '<path class="c-area" d="' + line + 'L1000 60V400H0Z"/><path class="c-line2" d="M0 360C200 350 400 330 600 300S900 250 1000 240"/>'
-        + '<path class="c-line" d="' + line + '"/></svg><i class="c-dot"></i></div>');
+    var svg = '<svg viewBox="0 0 100 100" focusable="false"><circle class="g-track" cx="50" cy="50" r="46"/><circle class="g-fill" pathLength="1000" cx="50" cy="50" r="46"/><path class="g-check" pathLength="100" d="M33 51l11.5 11.5L68 38"/></svg>';
+    var rings = [[45, 13, 9, 5, 7], [60, 84, 12, 4.4, 9], [4, 85, 8, 5.4, 8], [97, 9, 7.4, 5.6, 6.5], [27, 5, 5.4, 6.4, 7.5], [57, 46, 6, 6, 8.5], [3, 30, 6.4, 6, 9.5]];
+    var html = '<div class="hero-bg g-rings" aria-hidden="true"><div class="g-ring g-big">' + svg + '</div>';
+    rings.forEach(function (r, i) {
+        html += '<div class="g-ring" style="--x:' + r[0] + '%;--y:' + r[1] + '%;--s:' + r[2] + 'em;--sw:' + r[3] + ';--t:' + r[4] + 's;--dl:-' + (i * 2.3).toFixed(1) + 's">' + svg + '</div>';
+    });
+    host.insertAdjacentHTML('afterbegin', html + '</div>');
+    // 大きな輪の中心を、スマホ画像の中心に合わせる（浮く動きに引きずられないよう、レイアウト上の位置で測る）
+    var wrap = host.firstElementChild, inner = host.querySelector('.hero-inner'), visual = host.querySelector('.hero-visual');
+    function place() {
+        if (!inner || !visual) return;
+        wrap.style.setProperty('--px', (inner.offsetLeft + visual.offsetLeft + visual.offsetWidth / 2) + 'px');
+        wrap.style.setProperty('--py', (inner.offsetTop + visual.offsetTop + visual.offsetHeight / 2) + 'px');
+    }
+    place();
+    window.addEventListener('resize', place);
+    window.addEventListener('load', place);
 })();
