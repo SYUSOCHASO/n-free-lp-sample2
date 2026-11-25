@@ -285,14 +285,68 @@ $(function(){
 })();
 
 /* ------------------------------------------------------------
-   案2：彩紋。楕円を少しずつ回して重ねた輪を 2 つ置く（動きは CSS）
+   案2：光の粒。ぼけた大きな粒と小さな粒が、揺れながらゆっくり上っていく。画面外では描画を止める
 ------------------------------------------------------------ */
 (function () {
     var host = document.querySelector('.hero');
     if (!host) return;
-    var svg = '<svg class="hero-bg g-rose" viewBox="-320 -320 640 640" aria-hidden="true" focusable="false"><g class="g-a">', i;
-    for (i = 0; i < 30; i++) svg += '<g transform="rotate(' + (i * 6) + ')"><ellipse rx="300" ry="124" style="--i:' + i + '"/></g>';
-    svg += '</g><g class="g-b">';
-    for (i = 0; i < 20; i++) svg += '<g transform="rotate(' + (i * 9) + ')"><ellipse rx="176" ry="52" style="--i:' + i + '"/></g>';
-    host.insertAdjacentHTML('afterbegin', svg + '</g></svg>');
+    var canvas = document.createElement('canvas');
+    canvas.className = 'hero-bg';
+    canvas.setAttribute('aria-hidden', 'true');
+    host.insertBefore(canvas, host.firstChild);
+    var ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var w = 0, h = 0, dpr = 1, running = false, last = 0, dots = [];
+    function make(anywhere) {
+        var big = Math.random() < 0.22;
+        return {
+            x: Math.random() * w, y: anywhere ? Math.random() * h : h + 40,
+            r: big ? 14 + Math.random() * 34 : 1 + Math.random() * 2.6,
+            vy: big ? 5 + Math.random() * 7 : 9 + Math.random() * 16,
+            sway: 8 + Math.random() * 22, phase: Math.random() * 6.28, speed: 0.2 + Math.random() * 0.5,
+            alpha: big ? 0.05 + Math.random() * 0.09 : 0.35 + Math.random() * 0.55,
+            green: Math.random() < 0.45, big: big
+        };
+    }
+    function resize() {
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        w = host.clientWidth; h = host.clientHeight;
+        canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+        var count = Math.round(Math.max(34, Math.min(90, w * h / 15000)));
+        dots = []; for (var i = 0; i < count; i++) dots.push(make(true));
+    }
+    function draw(now, dt) {
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, w, h);
+        dots.forEach(function (d, i) {
+            d.y -= d.vy * dt;
+            if (d.y < -d.r * 2) { dots[i] = d = make(false); }
+            var x = d.x + Math.sin(now * 0.001 * d.speed + d.phase) * d.sway;
+            var twinkle = d.big ? 1 : 0.65 + 0.35 * Math.sin(now * 0.002 * d.speed + d.phase * 3);
+            var color = d.green ? '63,227,173' : '255,255,255';
+            if (d.big) {
+                var g = ctx.createRadialGradient(x, d.y, 0, x, d.y, d.r);
+                g.addColorStop(0, 'rgba(' + color + ',' + (d.alpha * 2.2) + ')'); g.addColorStop(1, 'rgba(' + color + ',0)');
+                ctx.fillStyle = g;
+            } else {
+                ctx.fillStyle = 'rgba(' + color + ',' + (d.alpha * twinkle) + ')';
+            }
+            ctx.beginPath(); ctx.arc(x, d.y, d.r, 0, 6.2832); ctx.fill();
+        });
+    }
+    function visible() { var r = host.getBoundingClientRect(); return r.bottom > 0 && r.top < window.innerHeight && !document.hidden; }
+    function loop(now) {
+        if (!visible()) { running = false; return; }
+        var dt = Math.min(0.05, (now - last) / 1000); last = now;
+        draw(now, dt); requestAnimationFrame(loop);
+    }
+    function start() { if (!running && !reduce && visible()) { running = true; last = performance.now(); requestAnimationFrame(loop); } }
+    resize();
+    var lastW = w;
+    window.addEventListener('resize', function () { if (host.clientWidth !== lastW || Math.abs(host.clientHeight - h) > 80) { resize(); lastW = w; if (reduce) draw(0, 0); } });
+    if (reduce) { draw(0, 0); return; }
+    window.addEventListener('scroll', start, { passive: true });
+    document.addEventListener('visibilitychange', start);
+    start();
 })();

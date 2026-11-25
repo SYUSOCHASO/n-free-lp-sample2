@@ -679,18 +679,6 @@ main { overflow-x: clip; }
 .hero::before, .hero::after { pointer-events: none; }
 .hero-bg { position: absolute; pointer-events: none; }
 
-/* 案2：墨色 × 白文字。証券や紙幣の「彩紋」のような細線の輪が、ゆっくり形を変えながら回る（SVG は script.js が置く） */
+/* 案2：墨色 × 白文字。大小の光の粒が、トップ全体をゆっくり立ちのぼり続ける（描画は script.js） */
 .hero { --h-bg: #141414; --h-text: #fff; --h-accent: #3fe3ad; --h-line: rgba(255, 255, 255, .55); --h-chip-bg: #fff; --h-chip-text: #141414; --h-btn-bg: #fff; --h-btn-text: #141414; --h-tag-bg: #3fe3ad; --h-tag-text: #141414; --h-marker: rgba(63, 227, 173, .35); }
-.g-rose { right: -13%; top: 50%; width: min(76vw, 1060px); aspect-ratio: 1; translate: 0 -50%; overflow: visible; animation: q-fade 2.4s ease-out both; }
-.g-rose ellipse { fill: none; stroke-width: 1; vector-effect: non-scaling-stroke; transform-box: fill-box; transform-origin: center; animation: g-morph 11s ease-in-out infinite alternate; animation-delay: calc(var(--i) * -.42s); }
-.g-rose .g-a { transform-origin: 0 0; animation: g-spin 120s linear infinite; }
-.g-rose .g-a ellipse { stroke: rgba(255, 255, 255, .2); }
-.g-rose .g-b { transform-origin: 0 0; animation: g-spin 80s linear infinite reverse; }
-.g-rose .g-b ellipse { stroke: rgba(63, 227, 173, .5); animation-duration: 8s; }
-@keyframes g-morph { from { transform: scaleY(.22); } to { transform: scaleY(1); } }
-@keyframes g-spin { to { transform: rotate(360deg); } }
-@media (max-width: 768px) {
-  .g-rose { right: -230px; top: 150px; width: 480px; }
-  .g-rose .g-a ellipse { stroke: rgba(255, 255, 255, .13); }
-  .g-rose .g-b ellipse { stroke: rgba(63, 227, 173, .32); }
-}
+canvas.hero-bg { inset: 0; width: 100%; height: 100%; animation: q-fade 2.4s ease-out both; }
