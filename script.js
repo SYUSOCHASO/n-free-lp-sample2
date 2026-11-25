@@ -285,24 +285,75 @@ $(function(){
 })();
 
 /* ------------------------------------------------------------
-   案2：浮かぶ硬貨。[左%, 上%, 直径em, 色, 線だけか, 濃さ, 浮く周期s, 返る周期s, 横の揺れem, 縦の揺れem]（動きは CSS）
+   案2：方眼の上を走る光。細い方眼を敷き、縦横の線に沿って尾を引く光を走らせる。画面外では描画を止める
 ------------------------------------------------------------ */
 (function () {
     var host = document.querySelector('.hero');
     if (!host) return;
-    var G = '#3fe3ad', W = '#fff';
-    var coins = [
-        [5, 14, 7, G, 0, 1, 6.5, 9, 1.6, 3.2], [16, 88, 5.4, W, 1, .8, 7.5, 11, 2, -3.4], [30, 6, 4, W, 0, .9, 5.5, 8, 1.2, 2.6],
-        [42, 93, 6.4, G, 1, .8, 8, 12, -2, -3], [52, 13, 5, G, 0, .5, 6, 10, 1.6, 3], [56, 64, 9, W, 1, .55, 8.5, 13, -2.2, 3.6],
-        [62, 34, 3.6, G, 0, 1, 5.5, 7, 1.4, -2.6], [68, 87, 5.6, W, 0, .9, 7, 9, -1.8, -3.2], [74, 8, 7, G, 1, .8, 7.5, 12, 2, 3],
-        [87, 92, 7.4, G, 0, 1, 6.5, 10, 1.8, -3.4], [96, 20, 6, W, 0, .9, 7, 11, -2, 3.4], [97, 60, 4.6, G, 1, .8, 6, 9, -1.4, -2.8],
-        [3, 54, 4.2, W, 1, .7, 6, 10, 1.4, 2.6]
-    ];
-    var html = '<div class="hero-bg y-coins" aria-hidden="true">';
-    coins.forEach(function (c, i) {
-        html += '<i style="--x:' + c[0] + '%;--y:' + c[1] + '%;--s:' + c[2] + 'em;--c:' + c[3] + ';--o:' + c[5] + ';--t:' + c[6] + 's;--f:' + c[7] + 's;--dl:-' + (i * 1.3).toFixed(1)
-            + 's;--dx:' + c[8] + 'em;--dy:' + c[9] + 'em"><svg viewBox="0 0 48 48" focusable="false"' + (c[4] ? ' class="y-line"' : '') + '>'
-            + '<circle class="y-face" cx="24" cy="24" r="22"/><circle class="y-rim" cx="24" cy="24" r="17.5"/><path class="y-mark" d="M17 14l7 10 7-10M24 24v11M18.5 26h11M18.5 30.5h11"/></svg></i>';
-    });
-    host.insertAdjacentHTML('afterbegin', html + '</div>');
+    var canvas = document.createElement('canvas');
+    canvas.className = 'hero-bg';
+    canvas.setAttribute('aria-hidden', 'true');
+    host.insertBefore(canvas, host.firstChild);
+    var ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var w = 0, h = 0, dpr = 1, cell = 56, running = false, last = 0, nextBeam = 0, beams = [];
+    function resize() {
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        w = host.clientWidth; h = host.clientHeight;
+        cell = w < 768 ? 40 : 56;
+        canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+    }
+    function spawn() {
+        var horizontal = Math.random() < 0.55, forward = Math.random() < 0.5;
+        var span = horizontal ? w : h, lines = Math.floor((horizontal ? h : w) / cell);
+        beams.push({
+            horizontal: horizontal, dir: forward ? 1 : -1, line: (1 + Math.floor(Math.random() * lines)) * cell,
+            pos: forward ? -260 : span + 260, speed: 170 + Math.random() * 190, len: 150 + Math.random() * 150,
+            color: Math.random() < 0.6 ? '63,227,173' : '255,255,255'
+        });
+    }
+    function draw(now, dt) {
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, w, h);
+        ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        for (var x = cell; x < w; x += cell) { ctx.moveTo(x + 0.5, 0); ctx.lineTo(x + 0.5, h); }
+        for (var y = cell; y < h; y += cell) { ctx.moveTo(0, y + 0.5); ctx.lineTo(w, y + 0.5); }
+        ctx.stroke();
+
+        if (now >= nextBeam && beams.length < 12) { spawn(); nextBeam = now + 380 + Math.random() * 620; }
+        ctx.lineWidth = 1.6;
+        beams = beams.filter(function (b) {
+            b.pos += b.speed * b.dir * dt;
+            var span = b.horizontal ? w : h;
+            if (b.pos < -320 || b.pos > span + 320) return false;
+            var tail = b.pos - b.len * b.dir, l = b.line + 0.5;
+            var g = b.horizontal ? ctx.createLinearGradient(tail, 0, b.pos, 0) : ctx.createLinearGradient(0, tail, 0, b.pos);
+            g.addColorStop(0, 'rgba(' + b.color + ',0)'); g.addColorStop(1, 'rgba(' + b.color + ',0.9)');
+            ctx.strokeStyle = g;
+            ctx.beginPath();
+            if (b.horizontal) { ctx.moveTo(tail, l); ctx.lineTo(b.pos, l); } else { ctx.moveTo(l, tail); ctx.lineTo(l, b.pos); }
+            ctx.stroke();
+            ctx.fillStyle = 'rgba(' + b.color + ',0.95)';
+            ctx.beginPath();
+            if (b.horizontal) ctx.arc(b.pos, l, 2, 0, 6.2832); else ctx.arc(l, b.pos, 2, 0, 6.2832);
+            ctx.fill();
+            return true;
+        });
+    }
+    function visible() { var r = host.getBoundingClientRect(); return r.bottom > 0 && r.top < window.innerHeight && !document.hidden; }
+    function loop(now) {
+        if (!visible()) { running = false; return; }
+        var dt = Math.min(0.05, (now - last) / 1000); last = now;
+        draw(now, dt); requestAnimationFrame(loop);
+    }
+    function start() { if (!running && !reduce && visible()) { running = true; last = performance.now(); requestAnimationFrame(loop); } }
+    resize();
+    if (window.ResizeObserver) new ResizeObserver(function () { resize(); if (reduce) draw(0, 0); }).observe(host);
+    if (reduce) { nextBeam = Infinity; draw(0, 0); return; }
+    window.addEventListener('scroll', start, { passive: true });
+    document.addEventListener('visibilitychange', start);
+    start();
 })();
