@@ -285,9 +285,22 @@ $(function(){
 })();
 
 /* ------------------------------------------------------------
-   案2：スキャンの光。光の線 1 本と、四隅のファインダーの印を置く（動きはすべて CSS）
+   背景パターン「カードの壁」：文字のないカードを段に並べる。各段は同じ並びを 2 回入れて、切れ目なく流す（動きは CSS）
 ------------------------------------------------------------ */
 (function () {
     var host = document.querySelector('.hero');
-    if (host) host.insertAdjacentHTML('afterbegin', '<div class="hero-bg s-scan" aria-hidden="true"><i class="s-beam"></i><b></b><b></b><b></b><b></b></div>');
+    if (!host) return;
+    var kinds = [
+        '<b></b><i></i><i class="s"></i>',
+        '<u><s style="--v:40%"></s><s style="--v:62%"></s><s style="--v:50%"></s><s style="--v:78%"></s><s style="--v:100%"></s></u><i class="s"></i>',
+        '<i class="a"></i><i></i><i class="s"></i><i></i>',
+        '<i></i><i class="s"></i><i></i><i class="a"></i>'
+    ];
+    var rows = window.innerWidth < 768 ? 13 : 8, html = '<div class="hero-bg v-wall" aria-hidden="true"><div class="v-tilt">';
+    for (var r = 0; r < rows; r++) {
+        var cards = '';
+        for (var c = 0; c < 9; c++) cards += '<div class="v-card">' + kinds[(c + r * 3) % 4] + '</div>';
+        html += '<div class="v-row" style="--t:' + (46 + (r * 7) % 22) + 's">' + cards + cards + '</div>';
+    }
+    host.insertAdjacentHTML('afterbegin', html + '</div></div>');
 })();

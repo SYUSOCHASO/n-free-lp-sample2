@@ -679,24 +679,25 @@ main { overflow-x: clip; }
 .hero::before, .hero::after { pointer-events: none; }
 .hero-bg { position: absolute; pointer-events: none; }
 
-/* 案2：墨色 × 白文字。領収書を読み取るスキャナーのように、光の線がトップ全体を上から下へなぞり続ける。四隅にはカメラのファインダーの印 */
-.hero { --h-bg: #141414; --h-text: #fff; --h-accent: #3fe3ad; --h-line: rgba(255, 255, 255, .55); --h-chip-bg: #fff; --h-chip-text: #141414; --h-btn-bg: #fff; --h-btn-text: #141414; --h-tag-bg: #3fe3ad; --h-tag-text: #141414; --h-marker: rgba(63, 227, 173, .35); }
-.hero::after { content: ""; position: absolute; inset: 0; background: radial-gradient(46% 62% at 80% 50%, rgba(63, 227, 173, .14), transparent 70%); animation: q-fade 2.4s ease-out both; }
-.s-scan { inset: 0; overflow: hidden; animation: q-fade 1.6s ease-out both; }
-.s-beam { position: absolute; left: 0; right: 0; top: 0; height: 260px; margin-top: -262px; background: linear-gradient(180deg, rgba(63, 227, 173, 0), rgba(63, 227, 173, .16)); border-bottom: 2px solid #3fe3ad; box-shadow: 0 6px 26px rgba(63, 227, 173, .6); animation: s-sweep 5.5s cubic-bezier(.45, 0, .55, 1) 1.4s infinite; }
-.s-scan b { position: absolute; width: 36px; height: 36px; border: 2px solid rgba(255, 255, 255, .7); animation: s-mark 2.75s ease-in-out infinite alternate; }
-.s-scan b:nth-of-type(1) { left: 22px; top: 22px; border-right: 0; border-bottom: 0; }
-.s-scan b:nth-of-type(2) { right: 22px; top: 22px; border-left: 0; border-bottom: 0; }
-.s-scan b:nth-of-type(3) { left: 22px; bottom: 22px; border-right: 0; border-top: 0; }
-.s-scan b:nth-of-type(4) { right: 22px; bottom: 22px; border-left: 0; border-top: 0; }
-@keyframes s-sweep { 0% { top: 0; } 72%, 100% { top: calc(100% + 280px); } }
-@keyframes s-mark { from { opacity: .35; } to { opacity: 1; } }
+/* 案2 の色：墨色 × 白文字 × 明るい緑。背景の動きは pat-*.css（--p-* がその色） */
+.hero { --h-bg: #141414; --h-text: #fff; --h-accent: #3fe3ad; --h-line: rgba(255, 255, 255, .55); --h-chip-bg: #fff; --h-chip-text: #141414; --h-btn-bg: #fff; --h-btn-text: #141414; --h-tag-bg: #3fe3ad; --h-tag-text: #141414; --h-marker: rgba(63, 227, 173, .35);
+  --p-card: #232625; --p-edge: rgba(255, 255, 255, .1); --p-bar: rgba(255, 255, 255, .16); --p-accent: #3fe3ad; --p-shadow: rgba(0, 0, 0, .5); --p-paper: #f4f4f1; --p-print: #b9bdb9; --p-route: rgba(255, 255, 255, .28); --p-grid: rgba(255, 255, 255, .07); }
+
+/* 背景パターン「カードの壁」：傾いた面に画面の部品のようなカードが並び、段ごとに左右へ流れ続ける（カードは script.js が置く） */
+.v-wall { inset: 0; overflow: hidden; font-size: 10px; animation: q-fade 1.8s ease-out both; -webkit-mask-image: linear-gradient(90deg, rgba(0, 0, 0, .1), rgba(0, 0, 0, .22) 40%, #000 72%); mask-image: linear-gradient(90deg, rgba(0, 0, 0, .1), rgba(0, 0, 0, .22) 40%, #000 72%); }
+.v-tilt { position: absolute; left: -15%; right: -15%; top: 50%; display: grid; gap: 2.2em; transform: translateY(-50%) perspective(1400px) rotateX(24deg) rotateZ(-11deg); }
+.v-row { display: flex; gap: 2.2em; width: max-content; animation: v-flow var(--t) linear infinite; }
+.v-row:nth-child(even) { animation-direction: reverse; }
+.v-card { flex: none; width: 21em; height: 12.4em; padding: 1.8em; display: grid; align-content: start; gap: 1em; background: var(--p-card); border: 1px solid var(--p-edge); border-radius: 8px; box-shadow: 0 1.6em 3em var(--p-shadow); }
+.v-card i { display: block; height: .8em; border-radius: 1em; background: var(--p-bar); }
+.v-card i.s { width: 58%; }
+.v-card i.a { width: 38%; background: var(--p-accent); }
+.v-card b { display: block; width: 3em; height: 3em; border-radius: 50%; background: var(--p-accent); }
+.v-card u { display: flex; align-items: flex-end; gap: .8em; height: 5.6em; }
+.v-card u s { flex: 1; height: var(--v); background: var(--p-bar); border-radius: 3px 3px 0 0; }
+.v-card u s:last-child { background: var(--p-accent); }
+@keyframes v-flow { to { transform: translateX(-50%); } }
 @media (max-width: 768px) {
-  .hero::after { background: radial-gradient(90% 34% at 60% 82%, rgba(63, 227, 173, .14), transparent 70%); }
-  .s-beam { height: 200px; margin-top: -202px; }
-  .s-scan b { width: 22px; height: 22px; }
-  .s-scan b:nth-of-type(1), .s-scan b:nth-of-type(3) { left: 8px; }
-  .s-scan b:nth-of-type(2), .s-scan b:nth-of-type(4) { right: 8px; }
-  .s-scan b:nth-of-type(1), .s-scan b:nth-of-type(2) { top: 10px; }
-  .s-scan b:nth-of-type(3), .s-scan b:nth-of-type(4) { bottom: 10px; }
+  .v-wall { font-size: 6.4px; -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, .2), rgba(0, 0, 0, .2) 58%, #000 82%); mask-image: linear-gradient(180deg, rgba(0, 0, 0, .2), rgba(0, 0, 0, .2) 58%, #000 82%); }
+  .v-tilt { left: -40%; right: -40%; }
 }
