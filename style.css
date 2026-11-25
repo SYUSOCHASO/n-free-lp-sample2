@@ -677,15 +677,20 @@ main { overflow-x: clip; }
 @keyframes q-phone { from { opacity: 0; transform: translateY(48px); } to { opacity: 1; transform: none; } }
 @keyframes q-float { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-12px) rotate(-1deg); } }
 .hero::before, .hero::after { pointer-events: none; }
+.hero-bg { position: absolute; pointer-events: none; }
 
-/* 案2：濃紺 × 白文字。細い円弧が 2 本、逆向きにゆっくり回り続ける */
-.hero { --h-bg: #0e2238; --h-text: #fff; --h-accent: #3fe3ad; --h-line: rgba(255, 255, 255, .55); --h-chip-bg: #fff; --h-chip-text: #0e2238; --h-btn-bg: #fff; --h-btn-text: #0e2238; --h-tag-bg: #3fe3ad; --h-tag-text: #0e2238; --h-marker: rgba(63, 227, 173, .35); --d1: min(70vw, 980px); --d2: min(46vw, 640px); }
-.hero::before, .hero::after { content: ""; position: absolute; top: 50%; aspect-ratio: 1; border-radius: 50%; border: 1.5px solid transparent; }
-.hero::before { right: -14%; width: var(--d1); margin-top: calc(var(--d1) / -2); border-top-color: rgba(255, 255, 255, .5); border-left-color: rgba(255, 255, 255, .14); animation: q-fade 2s ease-out both, h2-spin 26s linear infinite; }
-.hero::after { right: -2%; width: var(--d2); margin-top: calc(var(--d2) / -2); border-bottom-color: rgba(63, 227, 173, .8); border-right-color: rgba(63, 227, 173, .22); animation: q-fade 2s ease-out .4s both, h2-spin 17s linear infinite reverse; }
-@keyframes h2-spin { to { rotate: 360deg; } }
+/* 案2：墨色 × 白文字。証券や紙幣の「彩紋」のような細線の輪が、ゆっくり形を変えながら回る（SVG は script.js が置く） */
+.hero { --h-bg: #141414; --h-text: #fff; --h-accent: #3fe3ad; --h-line: rgba(255, 255, 255, .55); --h-chip-bg: #fff; --h-chip-text: #141414; --h-btn-bg: #fff; --h-btn-text: #141414; --h-tag-bg: #3fe3ad; --h-tag-text: #141414; --h-marker: rgba(63, 227, 173, .35); }
+.g-rose { right: -13%; top: 50%; width: min(76vw, 1060px); aspect-ratio: 1; translate: 0 -50%; overflow: visible; animation: q-fade 2.4s ease-out both; }
+.g-rose ellipse { fill: none; stroke-width: 1; vector-effect: non-scaling-stroke; transform-box: fill-box; transform-origin: center; animation: g-morph 11s ease-in-out infinite alternate; animation-delay: calc(var(--i) * -.42s); }
+.g-rose .g-a { transform-origin: 0 0; animation: g-spin 120s linear infinite; }
+.g-rose .g-a ellipse { stroke: rgba(255, 255, 255, .2); }
+.g-rose .g-b { transform-origin: 0 0; animation: g-spin 80s linear infinite reverse; }
+.g-rose .g-b ellipse { stroke: rgba(63, 227, 173, .5); animation-duration: 8s; }
+@keyframes g-morph { from { transform: scaleY(.22); } to { transform: scaleY(1); } }
+@keyframes g-spin { to { transform: rotate(360deg); } }
 @media (max-width: 768px) {
-  .hero { --d1: 560px; --d2: 360px; }
-  .hero::before { right: -300px; top: 190px; }
-  .hero::after { right: -190px; top: 190px; }
+  .g-rose { right: -230px; top: 150px; width: 480px; }
+  .g-rose .g-a ellipse { stroke: rgba(255, 255, 255, .13); }
+  .g-rose .g-b ellipse { stroke: rgba(63, 227, 173, .32); }
 }

@@ -283,3 +283,16 @@ $(function(){
     window.addEventListener('load', request);
     request();
 })();
+
+/* ------------------------------------------------------------
+   案2：彩紋。楕円を少しずつ回して重ねた輪を 2 つ置く（動きは CSS）
+------------------------------------------------------------ */
+(function () {
+    var host = document.querySelector('.hero');
+    if (!host) return;
+    var svg = '<svg class="hero-bg g-rose" viewBox="-320 -320 640 640" aria-hidden="true" focusable="false"><g class="g-a">', i;
+    for (i = 0; i < 30; i++) svg += '<g transform="rotate(' + (i * 6) + ')"><ellipse rx="300" ry="124" style="--i:' + i + '"/></g>';
+    svg += '</g><g class="g-b">';
+    for (i = 0; i < 20; i++) svg += '<g transform="rotate(' + (i * 9) + ')"><ellipse rx="176" ry="52" style="--i:' + i + '"/></g>';
+    host.insertAdjacentHTML('afterbegin', svg + '</g></svg>');
+})();
