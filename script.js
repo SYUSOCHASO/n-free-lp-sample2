@@ -285,68 +285,24 @@ $(function(){
 })();
 
 /* ------------------------------------------------------------
-   案2：光の粒。ぼけた大きな粒と小さな粒が、揺れながらゆっくり上っていく。画面外では描画を止める
+   案2：浮かぶ硬貨。[左%, 上%, 直径em, 色, 線だけか, 濃さ, 浮く周期s, 返る周期s, 横の揺れem, 縦の揺れem]（動きは CSS）
 ------------------------------------------------------------ */
 (function () {
     var host = document.querySelector('.hero');
     if (!host) return;
-    var canvas = document.createElement('canvas');
-    canvas.className = 'hero-bg';
-    canvas.setAttribute('aria-hidden', 'true');
-    host.insertBefore(canvas, host.firstChild);
-    var ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var w = 0, h = 0, dpr = 1, running = false, last = 0, dots = [];
-    function make(anywhere) {
-        var big = Math.random() < 0.22;
-        return {
-            x: Math.random() * w, y: anywhere ? Math.random() * h : h + 40,
-            r: big ? 14 + Math.random() * 34 : 1 + Math.random() * 2.6,
-            vy: big ? 5 + Math.random() * 7 : 9 + Math.random() * 16,
-            sway: 8 + Math.random() * 22, phase: Math.random() * 6.28, speed: 0.2 + Math.random() * 0.5,
-            alpha: big ? 0.05 + Math.random() * 0.09 : 0.35 + Math.random() * 0.55,
-            green: Math.random() < 0.45, big: big
-        };
-    }
-    function resize() {
-        dpr = Math.min(window.devicePixelRatio || 1, 2);
-        w = host.clientWidth; h = host.clientHeight;
-        canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
-        var count = Math.round(Math.max(34, Math.min(90, w * h / 15000)));
-        dots = []; for (var i = 0; i < count; i++) dots.push(make(true));
-    }
-    function draw(now, dt) {
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        ctx.clearRect(0, 0, w, h);
-        dots.forEach(function (d, i) {
-            d.y -= d.vy * dt;
-            if (d.y < -d.r * 2) { dots[i] = d = make(false); }
-            var x = d.x + Math.sin(now * 0.001 * d.speed + d.phase) * d.sway;
-            var twinkle = d.big ? 1 : 0.65 + 0.35 * Math.sin(now * 0.002 * d.speed + d.phase * 3);
-            var color = d.green ? '63,227,173' : '255,255,255';
-            if (d.big) {
-                var g = ctx.createRadialGradient(x, d.y, 0, x, d.y, d.r);
-                g.addColorStop(0, 'rgba(' + color + ',' + (d.alpha * 2.2) + ')'); g.addColorStop(1, 'rgba(' + color + ',0)');
-                ctx.fillStyle = g;
-            } else {
-                ctx.fillStyle = 'rgba(' + color + ',' + (d.alpha * twinkle) + ')';
-            }
-            ctx.beginPath(); ctx.arc(x, d.y, d.r, 0, 6.2832); ctx.fill();
-        });
-    }
-    function visible() { var r = host.getBoundingClientRect(); return r.bottom > 0 && r.top < window.innerHeight && !document.hidden; }
-    function loop(now) {
-        if (!visible()) { running = false; return; }
-        var dt = Math.min(0.05, (now - last) / 1000); last = now;
-        draw(now, dt); requestAnimationFrame(loop);
-    }
-    function start() { if (!running && !reduce && visible()) { running = true; last = performance.now(); requestAnimationFrame(loop); } }
-    resize();
-    var lastW = w;
-    window.addEventListener('resize', function () { if (host.clientWidth !== lastW || Math.abs(host.clientHeight - h) > 80) { resize(); lastW = w; if (reduce) draw(0, 0); } });
-    if (reduce) { draw(0, 0); return; }
-    window.addEventListener('scroll', start, { passive: true });
-    document.addEventListener('visibilitychange', start);
-    start();
+    var G = '#3fe3ad', W = '#fff';
+    var coins = [
+        [5, 14, 7, G, 0, 1, 6.5, 9, 1.6, 3.2], [16, 88, 5.4, W, 1, .8, 7.5, 11, 2, -3.4], [30, 6, 4, W, 0, .9, 5.5, 8, 1.2, 2.6],
+        [42, 93, 6.4, G, 1, .8, 8, 12, -2, -3], [52, 13, 5, G, 0, .5, 6, 10, 1.6, 3], [56, 64, 9, W, 1, .55, 8.5, 13, -2.2, 3.6],
+        [62, 34, 3.6, G, 0, 1, 5.5, 7, 1.4, -2.6], [68, 87, 5.6, W, 0, .9, 7, 9, -1.8, -3.2], [74, 8, 7, G, 1, .8, 7.5, 12, 2, 3],
+        [87, 92, 7.4, G, 0, 1, 6.5, 10, 1.8, -3.4], [96, 20, 6, W, 0, .9, 7, 11, -2, 3.4], [97, 60, 4.6, G, 1, .8, 6, 9, -1.4, -2.8],
+        [3, 54, 4.2, W, 1, .7, 6, 10, 1.4, 2.6]
+    ];
+    var html = '<div class="hero-bg y-coins" aria-hidden="true">';
+    coins.forEach(function (c, i) {
+        html += '<i style="--x:' + c[0] + '%;--y:' + c[1] + '%;--s:' + c[2] + 'em;--c:' + c[3] + ';--o:' + c[5] + ';--t:' + c[6] + 's;--f:' + c[7] + 's;--dl:-' + (i * 1.3).toFixed(1)
+            + 's;--dx:' + c[8] + 'em;--dy:' + c[9] + 'em"><svg viewBox="0 0 48 48" focusable="false"' + (c[4] ? ' class="y-line"' : '') + '>'
+            + '<circle class="y-face" cx="24" cy="24" r="22"/><circle class="y-rim" cx="24" cy="24" r="17.5"/><path class="y-mark" d="M17 14l7 10 7-10M24 24v11M18.5 26h11M18.5 30.5h11"/></svg></i>';
+    });
+    host.insertAdjacentHTML('afterbegin', html + '</div>');
 })();
