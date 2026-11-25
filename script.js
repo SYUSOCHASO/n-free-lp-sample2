@@ -285,17 +285,51 @@ $(function(){
 })();
 
 /* ------------------------------------------------------------
-   背景パターン「シャッター」：[左%, 上%, 幅em, 高さem]。1 つの枠は 9 秒で 1 巡し、枠ごとに 1.5 秒ずつずらす（動きは CSS）
+   背景パターン「撮る→記帳される」：座標はスマホ画像の中心を (0,0) とした px。
+   レシートは道筋に沿って中心へ向かいながら小さくなり、行は中心から出て大きくなる。PC 用とスマホ用で道筋を分ける
 ------------------------------------------------------------ */
 (function () {
     var host = document.querySelector('.hero');
     if (!host) return;
-    var frames = [[4, 14, 11, 15], [58, 23, 15, 20], [40, 86, 17, 13], [93, 13, 12, 16], [63, 66, 13, 17], [48, 8, 15, 10], [96, 84, 14, 18], [5, 82, 12, 15]];
-    var order = [0, 4, 2, 6, 1, 5, 3, 7], html = '<div class="hero-bg sh-wrap" aria-hidden="true">';
-    frames.forEach(function (f, i) {
-        html += '<div class="sh" style="--x:' + f[0] + '%;--y:' + f[1] + '%;--w:' + f[2] + 'em;--h:' + f[3] + 'em;--t:12s;--dl:-' + (order[i] * 1.5) + 's">'
-            + '<i class="sh-doc"></i><i class="sh-flash"></i><b></b><b></b><b></b><b></b>'
-            + '<svg viewBox="0 0 24 24" focusable="false"><circle cx="12" cy="12" r="11"/><path d="M7 12.4l3.4 3.4L17 9"/></svg></div>';
-    });
-    host.insertAdjacentHTML('afterbegin', html + '</div>');
+    var still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var receipt = '<rect class="w-shade" x="-17" y="-22" width="40" height="56" rx="2"/><rect class="w-paper" x="-20" y="-28" width="40" height="56" rx="2"/>'
+        + '<rect class="w-print" x="-13" y="-19" width="26" height="3.4" rx="1.7"/><rect class="w-print" x="-13" y="-11" width="17" height="3.4" rx="1.7"/>'
+        + '<rect class="w-print" x="-13" y="-3" width="26" height="3.4" rx="1.7"/><rect class="w-print" x="-13" y="5" width="20" height="3.4" rx="1.7"/><rect class="w-mark" x="1" y="16" width="12" height="4" rx="2"/>';
+    var row = '<rect class="w-shade" x="-49" y="-11" width="104" height="32" rx="16"/><rect class="w-paper" x="-52" y="-16" width="104" height="32" rx="16"/>'
+        + '<circle class="w-mark" cx="-36" cy="0" r="10"/><path class="w-tick" d="M-41 0.4l3.4 3.4L-31 -3.4"/>'
+        + '<rect class="w-print" x="-20" y="-2.4" width="40" height="4.8" rx="2.4"/><rect class="w-mark" x="28" y="-2.4" width="14" height="4.8" rx="2.4"/>';
+    function mover(shape, d, dur, begin, tilt, into) {
+        var motion = still ? '' : '<animateMotion dur="' + dur + 's" begin="' + begin + 's" repeatCount="indefinite" path="' + d + '"'
+            + (into ? ' keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines=".4 0 .9 .6"' : ' keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines=".1 .5 .5 1"') + '/>';
+        var fade = still ? '' : '<animate attributeName="opacity" values="' + (into ? '0;1;1;0' : '0;1;1;0') + '" keyTimes="' + (into ? '0;.12;.9;1' : '0;.15;.8;1') + '" dur="' + dur + 's" begin="' + begin + 's" repeatCount="indefinite"/>';
+        var size = still ? '' : '<animateTransform attributeName="transform" type="scale" values="' + (into ? '1;1;.3' : '.3;1;1') + '" keyTimes="' + (into ? '0;.7;1' : '0;.3;1') + '" dur="' + dur + 's" begin="' + begin + 's" repeatCount="indefinite"/>';
+        return '<g opacity="0">' + motion + fade + '<g>' + size + '<g transform="rotate(' + tilt + ')">' + shape + '</g></g></g>';
+    }
+    function set(cls, ins, outs, halo) {
+        var g = '<g class="' + cls + '"><circle class="w-halo" r="' + halo + '"/>';
+        if (!still) g += '<circle class="w-pulse" r="' + halo + '"><animate attributeName="r" values="' + (halo * .7) + ';' + (halo * 1.5) + '" dur="2.6s" repeatCount="indefinite"/><animate attributeName="opacity" values=".6;0" dur="2.6s" repeatCount="indefinite"/></circle>';
+        ins.forEach(function (d, i) { g += mover(receipt, d, 7 + (i % 3), -(i * 1.37).toFixed(2), [-12, 9, -6, 14, -9, 7, -14][i % 7], true); });
+        outs.forEach(function (d, i) { g += mover(row, d, 6 + (i % 2), -(i * 2.1).toFixed(2), [-5, 4, -3][i % 3], false); });
+        return g + '</g>';
+    }
+    host.insertAdjacentHTML('afterbegin', '<svg class="hero-bg w-flow" aria-hidden="true" focusable="false">'
+        + set('w-pc',
+            ['M-1180 -250C-820 -420 -420 -300 0 0', 'M-1180 130C-780 270 -380 180 0 0', 'M-720 -520C-540 -300 -260 -200 0 0', 'M-640 520C-470 300 -240 160 0 0',
+             'M-1220 -30C-820 -90 -400 40 0 0', 'M-300 -540C-340 -340 -160 -150 0 0', 'M-980 460C-700 360 -320 240 0 0'],
+            ['M0 0C60 -220 130 -330 300 -440', 'M0 0C70 220 130 330 300 440', 'M0 0C150 -40 240 -20 380 -70', 'M0 0C-80 -240 -200 -330 -380 -400'], 250)
+        + set('w-sp',
+            ['M-150 -760C-230 -500 -120 -260 0 0', 'M160 -720C250 -460 120 -240 0 0', 'M-240 -430C-210 -260 -100 -120 0 0', 'M250 -390C210 -240 100 -100 0 0',
+             'M10 -800C70 -560 -40 -280 0 0', 'M-230 -620C-120 -420 -160 -200 0 0'],
+            ['M0 0C-80 -60 -130 -150 -150 -230', 'M0 0C80 30 130 90 150 150', 'M0 0C80 -80 130 -140 140 -220'], 140)
+        + '</svg>');
+    // 図の原点を、スマホ画像の中心に合わせる（浮く動きに引きずられないよう、レイアウト上の位置で測る）
+    var svg = host.firstElementChild, inner = host.querySelector('.hero-inner'), visual = host.querySelector('.hero-visual');
+    function place() {
+        if (!inner || !visual) return;
+        svg.style.setProperty('--px', (inner.offsetLeft + visual.offsetLeft + visual.offsetWidth / 2) + 'px');
+        svg.style.setProperty('--py', (inner.offsetTop + visual.offsetTop + visual.offsetHeight / 2) + 'px');
+    }
+    place();
+    window.addEventListener('resize', place);
+    window.addEventListener('load', place);
 })();

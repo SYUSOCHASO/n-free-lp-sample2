@@ -679,26 +679,35 @@ main { overflow-x: clip; }
 .hero::before, .hero::after { pointer-events: none; }
 .hero-bg { position: absolute; pointer-events: none; }
 
-/* 案2 の色：墨色 × 白文字 × 明るい緑。背景の動きは pat-*.css（--p-* がその色） */
-.hero { --h-bg: #141414; --h-text: #fff; --h-accent: #3fe3ad; --h-line: rgba(255, 255, 255, .55); --h-chip-bg: #fff; --h-chip-text: #141414; --h-btn-bg: #fff; --h-btn-text: #141414; --h-tag-bg: #3fe3ad; --h-tag-text: #141414; --h-marker: rgba(63, 227, 173, .35);
-  --p-card: #232625; --p-edge: rgba(255, 255, 255, .1); --p-bar: rgba(255, 255, 255, .16); --p-accent: #3fe3ad; --p-shadow: rgba(0, 0, 0, .5); --p-paper: #f4f4f1; --p-print: #b9bdb9; --p-route: rgba(255, 255, 255, .28); --p-grid: rgba(255, 255, 255, .07); }
+/* 案5 の色：案6 と同じ作りの緑版。淡い緑 × N-Free の緑。背景の動きは pat-*.css（--p-* がその色）。お悩みセクション以降の色面は、それより淡い緑 */
+.hero { --h-bg: #eaf6f0; --h-text: #121212; --h-accent: #21b384; --h-line: #121212; --h-chip-bg: #121212; --h-chip-text: #fff; --h-btn-bg: #21b384; --h-btn-text: #fff; --h-tag-bg: #fff; --h-tag-text: #121212; --h-marker: rgba(33, 179, 132, .3);
+  --p-card: #fff; --p-edge: rgba(18, 18, 18, .05); --p-bar: #dbe9e2; --p-accent: #21b384; --p-shadow: rgba(20, 90, 65, .15); --p-paper: #fff; --p-print: #cbdcd4; --p-route: rgba(18, 18, 18, .3); --p-grid: rgba(18, 18, 18, .07); }
+:root { --c-green: #8fddbd; --c-bg-alt: #eef7f2; }
+/* 色面を淡くしたぶん、白地の上で文字や線として使う所は元の緑のままにする */
+.step-number { color: #21b384; }
+.voice { border-left-color: #21b384; }
+/* 淡い色面の上では白い数字が読めないので、濃い緑にする */
+.feature::before { color: #0c8f66; }
 
-/* 背景パターン「シャッター」：トップのあちこちにカメラの枠が現れ、ピントが合うように縮んで一瞬光り、チェックが残って消える。場所を変えて繰り返す（枠は script.js が置く） */
-.sh-wrap { inset: 0; font-size: 10px; overflow: hidden; }
-.sh { position: absolute; left: var(--x); top: var(--y); width: var(--w); height: var(--h); margin: calc(var(--h) / -2) 0 0 calc(var(--w) / -2); opacity: 0; animation: sh-frame var(--t) cubic-bezier(.3, 0, .2, 1) var(--dl) infinite; }
-.sh b { position: absolute; width: 2em; height: 2em; border: 2px solid var(--h-text); }
-.sh b:nth-of-type(1) { left: 0; top: 0; border-right: 0; border-bottom: 0; }
-.sh b:nth-of-type(2) { right: 0; top: 0; border-left: 0; border-bottom: 0; }
-.sh b:nth-of-type(3) { left: 0; bottom: 0; border-right: 0; border-top: 0; }
-.sh b:nth-of-type(4) { right: 0; bottom: 0; border-left: 0; border-top: 0; }
-.sh .sh-doc { position: absolute; inset: 16% 20%; background: var(--p-card); border: 1px solid var(--p-edge); }
-.sh .sh-doc::before { content: ""; position: absolute; inset: 14% 14% 30%; background: repeating-linear-gradient(180deg, var(--p-bar) 0 .5em, transparent .5em 1.5em); }
-.sh .sh-doc::after { content: ""; position: absolute; right: 14%; bottom: 12%; width: 36%; height: .6em; background: var(--p-accent); }
-.sh .sh-flash { position: absolute; inset: 0; background: var(--p-accent); opacity: 0; animation: sh-flash var(--t) linear var(--dl) infinite; }
-.sh svg { position: absolute; left: 50%; top: 50%; width: 4em; height: 4em; margin: -2em; opacity: 0; animation: sh-check var(--t) cubic-bezier(.34, 1.56, .64, 1) var(--dl) infinite; }
-.sh svg circle { fill: var(--p-accent); }
-.sh svg path { fill: none; stroke: var(--h-bg); stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
-@keyframes sh-frame { 0% { opacity: 0; transform: scale(1.32); } 8% { opacity: 1; transform: scale(1.32); } 26%, 62% { opacity: 1; transform: scale(1); } 74%, 100% { opacity: 0; transform: scale(1); } }
-@keyframes sh-flash { 0%, 27% { opacity: 0; } 30% { opacity: .6; } 42%, 100% { opacity: 0; } }
-@keyframes sh-check { 0%, 32% { opacity: 0; transform: scale(.3); } 42%, 62% { opacity: 1; transform: scale(1); } 74%, 100% { opacity: 0; transform: scale(1); } }
-@media (max-width: 768px) { .sh-wrap { font-size: 6.6px; } }
+/* 背景パターン「撮る→記帳される」：小さなレシートがトップ全体から曲線を描いてスマホ画像に吸い込まれ、チェックの付いた整った行になって出てくる（SVG は script.js が置く） */
+.w-flow { left: var(--px, 80%); top: var(--py, 50%); width: 1px; height: 1px; overflow: visible; animation: q-fade 1.6s ease-out both; }
+.w-flow .w-paper { fill: var(--p-paper); }
+.w-flow .w-shade { fill: var(--p-shadow); }
+.w-flow .w-print { fill: var(--p-print); }
+.w-flow .w-mark { fill: var(--p-accent); }
+.w-flow .w-tick { fill: none; stroke: #fff; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.w-flow .w-pulse { fill: none; stroke: var(--p-accent); stroke-width: 2; }
+.w-flow .w-halo { fill: var(--p-accent); opacity: .12; }
+.w-flow .w-sp { display: none; }
+@media (max-width: 768px) { .w-flow .w-pc { display: none; } .w-flow .w-sp { display: inline; } }
+
+/* トップのボタン強調 B：ボタンのふちを光が周回し続け、ボタン全体がゆっくり脈を打つように大きさを変える */
+@property --btn-ang { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+.hero .hero-cta { position: relative; display: inline-block; isolation: isolate; animation: btn-breathe 1.2s ease-in-out 2.4s infinite alternate; }
+.hero .hero-cta::before { content: ""; position: absolute; inset: -5px; z-index: -1;
+  background: conic-gradient(from var(--btn-ang), color-mix(in srgb, var(--h-btn-bg) 28%, transparent) 0 58%, var(--h-btn-bg) 80%, #121212 97%, color-mix(in srgb, var(--h-btn-bg) 28%, transparent) 100%);
+  animation: q-fade .6s ease-out 2.3s both, btn-spin 2.4s linear 2.3s infinite; }
+.hero .btn-arrow { animation: arrow-nudge 1.1s ease-in-out 2.4s infinite; }
+@keyframes btn-spin { to { --btn-ang: 360deg; } }
+@keyframes btn-breathe { from { transform: scale(1); } to { transform: scale(1.04); } }
+@media (max-width: 768px) { .hero .hero-cta { display: block; } @keyframes btn-breathe { from { transform: scale(1); } to { transform: scale(1.025); } } }
